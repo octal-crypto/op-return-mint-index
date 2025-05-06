@@ -96,13 +96,14 @@ async function processBlock(height) {
     const txCount = blockData.tx_count;
 
     outer: for (let start = 0; start < txCount; start += 25) {
+      console.log(`Processing transactions ${start} to ${start+25} of block ${height}`)
       const txs = await fetchJSON(`${BASE_URL}/block/${blockHash}/txs/${start}`);
       for (const tx of txs) {
         for (const vout of tx.vout) {
           if (vout.scriptpubkey_type === 'op_return') {
             const data = validateJson(extractOpReturnData(vout.scriptpubkey));
             if (data) {
-              console.log(`Block: ${height}, TXID: ${tx.txid}\nData: ${JSON.stringify(data)}`);
+              console.log(`\nBlock: ${height}, TXID: ${tx.txid}\nData: ${JSON.stringify(data)}`);
               totalMinted += parseInt(data.amt);
               console.log(`totalMinted: ${totalMinted}\n`);
 
@@ -132,7 +133,7 @@ async function processBlock(height) {
     const tipHeight = parseInt(await fetchText(`${BASE_URL}/blocks/tip/height`));
 
     for (let height = START_HEIGHT; height <= tipHeight && totalMinted < 2100000; height++) {
-      console.log(`Processing block ${height}...`);
+      console.log(`Processing block ${height}`);
       await processBlock(height);
       await sleep(SLEEP_INTERVAL_MS);
     }
