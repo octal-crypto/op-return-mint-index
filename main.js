@@ -129,8 +129,7 @@ async function processBlock(height) {
 
 (async () => {
   try {
-    const tipHeightText = await fetchText(`${BASE_URL}/blocks/tip/height`);
-    const tipHeight = parseInt(tipHeightText, 10);
+    const tipHeight = parseInt(await fetchText(`${BASE_URL}/blocks/tip/height`));
 
     for (let height = START_HEIGHT; height <= tipHeight && totalMinted < 2100000; height++) {
       console.log(`Processing block ${height}...`);
