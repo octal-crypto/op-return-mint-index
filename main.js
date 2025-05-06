@@ -2,11 +2,11 @@ const fs = require('fs');
 
 // read checkpoint files
 const START_HEIGHT = parseInt(fs.readFileSync('block')) + 1;
-let mints = JSON.parse(fs.readFileSync('mints'));
+const mints = JSON.parse(fs.readFileSync('mints'));
 let totalMinted = Object.values(mints).reduce((prev, curr) => prev+curr, 0);
 
 const BASE_URL = 'https://mempool.space/api';
-const SLEEP_INTERVAL_MS = 200;
+const SLEEP_INTERVAL_MS = 50;
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,6 +21,7 @@ async function fetchText(url) {
 }
 
 async function fetchJSON(url) {
+  console.log(url)
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} - ${url}`);
