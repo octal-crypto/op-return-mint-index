@@ -5,8 +5,9 @@ const START_HEIGHT = parseInt(fs.readFileSync('block')) + 1;
 const mints = JSON.parse(fs.readFileSync('mints'));
 let totalMinted = Object.values(mints).reduce((prev, curr) => prev+curr, 0);
 
+// increase if http 429
+const SLEEP_INTERVAL_MS = 0;
 const BASE_URL = 'https://mempool.space/api';
-const SLEEP_INTERVAL_MS = 50;
 
 async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -94,7 +95,7 @@ async function processBlock(height) {
     const blockData = await fetchJSON(`${BASE_URL}/block/${blockHash}`);
     const txCount = blockData.tx_count;
 
-    for (let start = 0; start < txCount; start += 25) {
+    outer: for (let start = 0; start < txCount; start += 25) {
       const txs = await fetchJSON(`${BASE_URL}/block/${blockHash}/txs/${start}`);
       for (const tx of txs) {
         for (const vout of tx.vout) {
@@ -109,11 +110,7 @@ async function processBlock(height) {
               mints[data.add] += parseInt(data.amt);
               // console.log(mints);
 
-              if (totalMinted >= 2100000) { // todo: overflow?
-                console.log(JSON.stringify(mints, null, 2));
-                process.exit(1);
-              }
-
+              if (totalMinted >= 2100000) break outer; // todo: overflow?
               break; // dont allow multiple outputs
             }
           }
@@ -135,11 +132,12 @@ async function processBlock(height) {
     const tipHeightText = await fetchText(`${BASE_URL}/blocks/tip/height`);
     const tipHeight = parseInt(tipHeightText, 10);
 
-    for (let height = START_HEIGHT; height <= tipHeight; height++) {
+    for (let height = START_HEIGHT; height <= tipHeight && totalMinted < 2100000; height++) {
       console.log(`Processing block ${height}...`);
       await processBlock(height);
       await sleep(SLEEP_INTERVAL_MS);
     }
+    console.log('done')
   } catch (error) {
     console.error(`Fatal error: ${error.message}`);
   }
