@@ -21,7 +21,6 @@ async function fetchText(url) {
 }
 
 async function fetchJSON(url) {
-  console.log(url)
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status} - ${url}`);
